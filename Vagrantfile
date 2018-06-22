@@ -46,7 +46,7 @@ Vagrant.configure("2") do |config|
   tar.winrm.retry_limit = 30
   tar.winrm.retry_delay = 10
   tar.vm.boot_timeout = 700
-  tar.vm.network :private_network, ip: "192.168.40.4", gateway: "192.168.40.1", dns: "192.168.40.2"
+  tar.vm.network :private_network, ip: "192.168.40.3", gateway: "192.168.40.1", dns: "192.168.40.2"
 
   # Enable Shared Folders
   tar.vm.synced_folder ".", "/vagrant", disabled: false
@@ -79,7 +79,7 @@ Vagrant.configure("2") do |config|
   dsz.vm.guest = :windows
   dsz.vm.communicator = "winrm"
   dsz.vm.boot_timeout = 300
-  dsz.vm.network :private_network, ip: "192.168.40.3", gateway: "192.168.40.1", dns: "8.8.8.8"
+  dsz.vm.network :private_network, ip: "192.168.40.4", gateway: "192.168.40.1", dns: "8.8.8.8"
 
   # Enable Shared Folders
   dsz.vm.synced_folder ".", "/vagrant", disabled: false
