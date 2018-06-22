@@ -1,0 +1,369 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "name": "DanderSpritz-box",
+      "iso_url": "{{user `iso_url_dsz`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type_dsz`}}",
+      "iso_checksum": "{{user `iso_checksum_dsz`}}",
+      "headless": "{{user `headless`}}",
+      "boot_wait": "2m",
+      "communicator": "winrm",
+      "winrm_timeout": "60m",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows10_64",
+      "disk_size": "{{user `disk_size`}}",
+      "floppy_files": [
+        "{{user `autounattend_dsz`}}",
+        "./scripts/fixnetwork.ps1",
+        "./scripts/disable-updates.ps1",
+        "./scripts/openssh.ps1"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{user `memory_size`}}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{user `cpus`}}"
+        ]
+      ]
+    },
+    {
+      "type": "virtualbox-iso",
+      "name": "Domain_Controller",
+      "iso_url": "{{user `iso_url_dc`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type_dc`}}",
+      "iso_checksum": "{{user `iso_checksum_dc`}}",
+      "headless": "{{user `headless`}}",
+      "boot_wait": "2m",
+      "communicator": "winrm",
+      "winrm_timeout": "60m",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows2008_64",
+      "disk_size": "{{user `disk_size`}}",
+      "floppy_files": [
+        "{{user `autounattend_dc`}}",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/win-updates.ps1",
+        "./scripts/openssh.ps1"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{user `memory_size`}}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{user `cpus`}}"
+        ]
+      ]
+    },
+    {
+      "type": "virtualbox-iso",
+      "name": "Target",
+      "iso_url": "{{user `iso_url_target`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type_target`}}",
+      "iso_checksum": "{{user `iso_checksum_target`}}",
+      "headless": "{{user `headless`}}",
+      "boot_wait": "2m",
+      "shutdown_timeout": "10m", 
+      "communicator": "winrm",
+      "winrm_timeout": "60m",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows7_64",
+      "disk_size": "{{user `disk_size`}}",
+      "floppy_files": [
+        "{{user `autounattend_target`}}",
+        "./scripts/Target/dis-updates.ps1",
+        "./scripts/hotfix-KB3102810.bat",
+        "./scripts/openssh.ps1"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{user `memory_size`}}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{user `cpus`}}"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "windows-restart",
+      "restart_timeout": "5m",
+      "only": ["DanderSpritz-box"]
+
+    },
+    {
+      "type": "windows-shell",
+      "only": ["DanderSpritz-box"],
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+        "./scripts/vm-guest-tools.bat",
+        "./scripts/vagrant-ssh.bat",
+        "./scripts/enable-rdp.bat"
+      ]
+    },
+    {
+      "type": "powershell",
+      "only": ["DanderSpritz-box"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Win10/Set-PowerSettings.ps1",
+        "./scripts/Win10/Set-WindowsTelemetrySettings.ps1",
+        "./scripts/Win10/Set-LowSecurityWindowsDefenderAntiVirusSettings.ps1",
+        "./scripts/Win10/Set-LowSecurityWindowsDefenderSmartScreenSettings.ps1",
+        "./scripts/Win10/Remove-PreInstalledApps.ps1",
+        "./scripts/Install-Chocolatey.ps1",
+        "./scripts/Install-Git.ps1",
+        "./scripts/Win10/Install-jre6u21.ps1",
+        "./scripts/Win10/Install-python.ps1",
+        "./scripts/Win10/Install-winpy32.ps1",
+        "./scripts/Win10/Install-DanderSpritz.ps1",
+        "./scripts/autologon.ps1",
+        "./scripts/Win10/virtual-drive.ps1"
+      ]
+    },
+    {
+      "type": "file",
+      "only": ["Domain_Controller"],
+      "source": "./answer_files/dcpromo_answer.txt",
+      "destination": "C:\\windows\\Temp\\",
+      "direction": "upload"
+    },
+    {
+      "type": "windows-shell",
+      "only": ["Domain_Controller"],
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+        "./scripts/vm-guest-tools.bat",
+        "./scripts/vagrant-ssh.bat",
+        "./scripts/enable-rdp.bat",
+        "./scripts/compact.bat"
+
+      ]
+    },
+    {
+      "type": "powershell",
+      "only": ["Domain_Controller"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Install-Chocolatey.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Domain_Controller"],
+      "restart_timeout": "5m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Domain_Controller"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/WinDC/Install-dotnet45.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Domain_Controller"],
+      "restart_timeout": "5m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Domain_Controller"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/WinDC/Install-Powershell5.ps1",
+        "./scripts/WinDC/Set-Hostname-dc.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Domain_Controller"],
+      "restart_timeout": "5m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Domain_Controller"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/WinDC/Create-domain.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Domain_Controller"],
+      "restart_timeout": "15m"
+    },
+    {
+      "type": "windows-shell",
+      "only": ["Target"],
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+        "./scripts/vm-guest-tools.bat",
+        "./scripts/vagrant-ssh.bat",
+        "./scripts/enable-rdp.bat",
+        "./scripts/compact.bat",
+        "./scripts/Target/create-tools-folder.bat",
+        "./scripts/Target/disable_firewall.bat"
+      ]
+    },
+    {
+      "type": "powershell",
+      "only": ["Target"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Install-Chocolatey.ps1"
+
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Target"],
+      "restart_timeout": "5m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Target"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Target/Install-KB2454826.ps1",
+        "./scripts/Target/Install-KB2534366.ps1",
+        "./scripts/Target/Install-KB2533552.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Target"],
+      "restart_timeout": "15m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Target"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Target/Install-SP1.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Target"],
+      "restart_timeout": "30m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Target"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Target/Install-KB3035131.ps1",
+        "./scripts/Target/Install-KB3033929.ps1",
+        "./scripts/Target/Install-KB2999226.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "only": ["Target"],
+      "restart_timeout": "15m"
+    },
+    {
+      "type": "powershell",
+      "only": ["Target"],
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/Target/Install-vcredist2015.ps1",
+        "./scripts/Target/Set-ChocolateyFLARERepo.ps1",
+        "./scripts/Target/show-hidden-files.ps1",
+        "./scripts/Target/Install-Sysinternals.ps1",
+        "./scripts/Target/Install-FLAREAPIMonitor.ps1",
+        "./scripts/Target/Install-FLAREEXEInfoPE.ps1",
+        "./scripts/Target/Install-FLAREHXD.ps1",
+        "./scripts/Target/Install-FLAREPEID.ps1",
+        "./scripts/Target/Install-FLAREPEView.ps1",
+        "./scripts/Target/Install-FLAREWindbg.ps1",
+        "./scripts/Target/Install-FLAREWireshark.ps1",
+        "./scripts/Target/Install-FLAREBinaryNinja.ps1",
+        "./scripts/Target/Install-FLAREHashCalc.ps1",
+        "./scripts/Target/Install-FLAREIDAFree.ps1",
+        "./scripts/Target/Install-FLAREOllydbg2.ps1",
+        "./scripts/Target/Install-Sysmon.ps1",
+        "./scripts/Target/Set-Hostname.ps1",
+        "./scripts/autologon.ps1"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "only": ["DanderSpritz-box"],
+      "keep_input_artifact": false,
+      "output": "windows_10_danderspritz.box",
+      "vagrantfile_template": "vagrantfile-windows_10.template"
+    },
+    {
+      "type": "vagrant",
+      "only": ["Domain_Controller"],
+      "keep_input_artifact": false,
+      "output": "windows_2008_r2_dc.box",
+      "vagrantfile_template": "vagrantfile-windows_2008_r2.template"
+    },
+    {
+      "type": "vagrant",
+      "only": ["Target"],
+      "keep_input_artifact": false,
+      "output": "windows_7_target.box",
+      "vagrantfile_template": "vagrantfile-windows_7.template"
+    }
+  ],
+  "variables": {
+    "iso_url_target": "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso",
+    "iso_checksum_type_target": "md5",
+    "iso_checksum_target": "1d0d239a252cb53e466d39e752b17c28",
+    "autounattend_target": "./answer_files/7/Autounattend.xml",
+    "iso_url_dsz": "http://care.dlservice.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+    "iso_checksum_type_dsz": "sha1",
+    "iso_checksum_dsz": "56ab095075be28a90bc0b510835280975c6bb2ce",
+    "autounattend_dsz": "./answer_files/10/Autounattend.xml",
+    "iso_url_dc": "http://download.microsoft.com/download/7/5/E/75EC4E54-5B02-42D6-8879-D8D3A25FBEF7/7601.17514.101119-1850_x64fre_server_eval_en-us-GRMSXEVAL_EN_DVD.iso",
+    "iso_checksum_type_dc": "md5",
+    "iso_checksum_dc": "4263be2cf3c59177c45085c0a7bc6ca5",
+    "autounattend_dc": "./answer_files/2008_r2/Autounattend.xml",
+    "headless": "true",
+    "cpus": "2",
+    "memory_size": "2048",
+    "disk_size": "30000"
+  }
+}

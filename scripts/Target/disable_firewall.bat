@@ -1,0 +1,1 @@
+@NetSh AdvFirewall Set AllProfiles State Off
