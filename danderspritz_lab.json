@@ -353,7 +353,7 @@
     "iso_checksum_type_target": "md5",
     "iso_checksum_target": "1d0d239a252cb53e466d39e752b17c28",
     "autounattend_target": "./answer_files/7/Autounattend.xml",
-    "iso_url_dsz": "http://care.dlservice.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+    "iso_url_dsz": "http://download.microsoft.com/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
     "iso_checksum_type_dsz": "sha1",
     "iso_checksum_dsz": "56ab095075be28a90bc0b510835280975c6bb2ce",
     "autounattend_dsz": "./answer_files/10/Autounattend.xml",
