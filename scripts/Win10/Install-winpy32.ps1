@@ -16,7 +16,7 @@
  Try
  {
 	 # Download Winpy32 from sourceforce
-	(New-Object System.Net.WebClient).DownloadFile('https://sourceforge.mirrorservice.org/p/py/pywin32/pywin32/Build%20221/pywin32-221.win32-py2.6.exe', 'C:\Windows\Temp\pywin32-py2.6.exe')
+	(New-Object System.Net.WebClient).DownloadFile('https://jaist.dl.sourceforge.net/project/pywin32/pywin32/Build%20221/pywin32-221.win32-py2.6.exe', 'C:\Windows\Temp\pywin32-py2.6.exe')
 	
 	# Extract required files from exe as there is no way to launch .exe w/o a GUI
 	cmd /c "C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\pywin32-py2.6.exe -oC:\Windows\Temp\winpy
